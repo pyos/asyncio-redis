@@ -785,6 +785,9 @@ class RedisProtocol(asyncio.Protocol, metaclass=_RedisProtocolMeta):
         self._transaction = None
         self._transaction_response_queue = None # Transaction answer queue
 
+        # Pipelined calls
+        self._pipelined_calls = set() # Set of all the pipelined calls.
+
         self._line_received_handlers = {
             b'+': self._handle_status_reply,
             b'-': self._handle_error_reply,
@@ -797,9 +800,6 @@ class RedisProtocol(asyncio.Protocol, metaclass=_RedisProtocolMeta):
         self.transport = transport
         self._is_connected = True
         logger.log(logging.INFO, 'Redis connection made')
-
-        # Pipelined calls
-        self._pipelined_calls = set() # Set of all the pipelined calls.
 
         # Start parsing reader stream.
         self._reader = StreamReader(loop=self._loop)
