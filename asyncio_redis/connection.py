@@ -20,8 +20,8 @@ class Connection:
     """
     @classmethod
     @asyncio.coroutine
-    def create(cls, host='localhost', port=6379, *, password=None, db=0,
-               encoder=None, auto_reconnect=True, loop=None, protocol_class=RedisProtocol):
+    def create(cls, host='localhost', port=6379, *, password=None, db=0, encoder=None,
+               auto_reconnect=True, loop=None, block=True, protocol_class=RedisProtocol):
         """
         :param host: Address, either host or unix domain socket path
         :type host: str
@@ -36,6 +36,8 @@ class Connection:
         :param auto_reconnect: Enable auto reconnect
         :type auto_reconnect: bool
         :param loop: (optional) asyncio event loop.
+        :param block: (optional) Do not return until the connection is ready (True by default)
+        :type block: bool
         :type protocol_class: :class:`~asyncio_redis.RedisProtocol`
         :param protocol_class: (optional) redis protocol implementation
         """
@@ -61,7 +63,10 @@ class Connection:
                         connection_lost_callback=connection_lost, loop=connection._loop)
 
         # Connect
-        yield from connection._reconnect()
+        if block:
+            yield from connection._reconnect()
+        else:
+            asyncio.async(connection._reconnect(), loop=connection._loop)
 
         return connection
 

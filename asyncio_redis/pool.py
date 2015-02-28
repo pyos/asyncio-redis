@@ -25,7 +25,7 @@ class Pool:
     @classmethod
     @asyncio.coroutine
     def create(cls, host='localhost', port=6379, *, password=None, db=0,
-               encoder=None, poolsize=1, auto_reconnect=True, loop=None,
+               encoder=None, poolsize=1, auto_reconnect=True, loop=None, block=True,
                protocol_class=RedisProtocol):
         """
         Create a new connection pool instance.
@@ -45,12 +45,15 @@ class Pool:
         :param auto_reconnect: Enable auto reconnect
         :type auto_reconnect: bool
         :param loop: (optional) asyncio event loop.
+        :param block: (optional) Do not return until all connections are ready (True by default)
+        :type block: bool
         :type protocol_class: :class:`~asyncio_redis.RedisProtocol`
         :param protocol_class: (optional) redis protocol implementation
         """
         self = cls()
         self._host = host
         self._port = port
+        self._loop = loop
         self._poolsize = poolsize
 
         # Create connections
@@ -59,7 +62,7 @@ class Pool:
         for i in range(poolsize):
             connection = yield from Connection.create(host=host, port=port,
                             password=password, db=db, encoder=encoder,
-                            auto_reconnect=auto_reconnect, loop=loop,
+                            auto_reconnect=auto_reconnect, loop=loop, block=block,
                             protocol_class=protocol_class)
             self._connections.append(connection)
 
